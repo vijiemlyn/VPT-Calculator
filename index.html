@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VPT × 1.09 × 10% Calculator</title>
+  <style>
+    :root {
+      --bg: #0f172a;           /* slate-900 */
+      --panel: #111827;        /* gray-900 */
+      --text: #e5e7eb;         /* gray-200 */
+      --muted: #9ca3af;        /* gray-400 */
+      --accent: #a78bfa;       /* violet-300 */
+      --ring: rgba(167,139,250,.5);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 20% -20%, #1f2937, transparent),
+                  radial-gradient(1200px 800px at 120% 20%, #1e1b4b, transparent),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .card {
+      width: 100%;
+      max-width: 680px;
+      background: linear-gradient(180deg, #0b1022, #0b0f1a);
+      border: 1px solid #1f2937;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      padding: 28px;
+    }
+    h1 { font-size: clamp(20px, 3vw, 28px); margin: 0 0 4px; letter-spacing: .2px; }
+    p.lead { margin: 6px 0 20px; color: var(--muted); }
+
+    label { display: block; font-weight: 600; margin-bottom: 8px; }
+    .row { display: grid; grid-template-columns: 1fr; gap: 16px; }
+
+    @media (min-width: 640px) {
+      .row { grid-template-columns: 1fr 1fr; }
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid #28344a;
+      background: #0b1224;
+      color: var(--text);
+      outline: none;
+      font-size: 16px;
+      transition: box-shadow .2s, border-color .2s;
+    }
+    input[type="number"]:focus { border-color: var(--accent); box-shadow: 0 0 0 6px var(--ring); }
+
+    .formula {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      background: #0b1224;
+      border: 1px dashed #2b3a57;
+      border-radius: 14px;
+      padding: 12px 14px;
+      color: #cbd5e1;
+    }
+    .chip { padding: 6px 10px; border-radius: 999px; background: #151b31; border: 1px solid #273353; }
+
+    .result {
+      margin-top: 14px;
+      padding: 16px;
+      background: #0a0f1f;
+      border: 1px solid #1f2a44;
+      border-radius: 14px;
+    }
+    .result h2 { margin: 0 0 8px; font-size: 18px; }
+    .big { font-size: clamp(22px, 4.5vw, 36px); font-weight: 800; letter-spacing: .3px; }
+    .muted { color: var(--muted); font-size: 14px; }
+
+    .footer {
+      display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-top: 18px; color: var(--muted);
+      font-size: 12px;
+    }
+    .btn {
+      appearance: none; cursor: pointer; border: 1px solid #374151; background: #0d1326; color: var(--text);
+      padding: 10px 14px; border-radius: 12px; font-weight: 600; transition: transform .04s ease, box-shadow .2s;
+    }
+    .btn:active { transform: translateY(1px); }
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <h1>VPT × 1.09 × 10% Calculator</h1>
+    <p class="lead">Enter a value for <strong>VPT</strong>. The result is computed as <code>VPT × 1.09 × 10%</code> (i.e., <code>VPT × 0.109</code>).</p>
+
+    <div class="row" aria-label="Inputs">
+      <div>
+        <label for="vpt">VPT</label>
+        <input id="vpt" name="vpt" type="number" inputmode="decimal" step="any" placeholder="e.g., 1250" autocomplete="off" />
+      </div>
+      <div>
+        <label>Formula</label>
+        <div class="formula" aria-label="Formula">
+          <span class="chip">VPT</span>
+          <span>×</span>
+          <span class="chip">1.09</span>
+          <span>×</span>
+          <span class="chip">10%</span>
+          <span class="muted">=</span>
+          <span class="chip" title="VPT × 0.109">VPT × 0.109</span>
+        </div>
+      </div>
+    </div>
+
+    <section class="result" aria-live="polite">
+      <h2>Output</h2>
+      <div class="big" id="result">—</div>
+      <div class="muted" id="details">Enter a value to see the result.</div>
+    </section>
+
+    <div class="footer">
+      <span>Precision: <span id="precision-label">Auto</span></span>
+      <div style="display:flex; gap:8px;">
+        <button class="btn" id="fmt-auto" type="button">Auto</button>
+        <button class="btn" id="fmt-2dp" type="button">2 dp</button>
+        <button class="btn" id="fmt-0dp" type="button">No decimals</button>
+        <button class="btn" id="copy" type="button" title="Copy result">Copy</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (function(){
+      const vptEl = document.getElementById('vpt');
+      const resultEl = document.getElementById('result');
+      const detailsEl = document.getElementById('details');
+      const copyBtn = document.getElementById('copy');
+      const fmtAuto = document.getElementById('fmt-auto');
+      const fmt2dp = document.getElementById('fmt-2dp');
+      const fmt0dp = document.getElementById('fmt-0dp');
+      const precisionLabel = document.getElementById('precision-label');
+
+      let mode = 'auto'; // 'auto' | '2dp' | '0dp'
+
+      function compute(v){
+        return v * 1.09 * 0.10; // equivalently v * 0.109
+      }
+
+      function format(n){
+        if (!Number.isFinite(n)) return '—';
+        if (mode === '2dp') return n.toFixed(2);
+        if (mode === '0dp') return Math.round(n).toString();
+        // auto: show up to 6 significant figures, but not scientific unless huge
+        const s = n.toPrecision(6);
+        return (/e[+-]?\d+/i.test(s)) ? n.toString() : s;
+      }
+
+      function update(){
+        const raw = parseFloat(vptEl.value);
+        if (Number.isNaN(raw)) {
+          resultEl.textContent = '—';
+          detailsEl.textContent = 'Enter a value to see the result.';
+          return;
+        }
+        const out = compute(raw);
+        resultEl.textContent = format(out);
+        detailsEl.textContent = `Exact (full precision): ${out}`;
+      }
+
+      vptEl.addEventListener('input', update);
+
+      function setMode(next){
+        mode = next; update();
+        precisionLabel.textContent = (next === 'auto' ? 'Auto' : next === '2dp' ? '2 decimal places' : 'No decimals');
+      }
+      fmtAuto.addEventListener('click', () => setMode('auto'));
+      fmt2dp.addEventListener('click', () => setMode('2dp'));
+      fmt0dp.addEventListener('click', () => setMode('0dp'));
+
+      copyBtn.addEventListener('click', async () => {
+        const txt = resultEl.textContent.trim();
+        try { await navigator.clipboard.writeText(txt); copyBtn.textContent = 'Copied!'; }
+        catch { copyBtn.textContent = 'Copy failed'; }
+        setTimeout(() => (copyBtn.textContent = 'Copy'), 1200);
+      });
+
+      // Prefill from URL like ?vpt=123
+      const params = new URLSearchParams(location.search);
+      if (params.has('vpt')) {
+        vptEl.value = params.get('vpt');
+        update();
+      }
+    })();
+  </script>
+</body>
+</html>
